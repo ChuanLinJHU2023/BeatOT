@@ -34,8 +34,8 @@ y_target = data['y_target']
 # Step 2: Set Hyper Parameter
 hyper_parameter_p = 2
 hyper_parameter_c = 2
-learning_rate = 0.001
-num_epochs = 100000
+learning_rate = 0.002
+num_epochs = 20000
 num_prints = 10
 num_epochs_per_print = num_epochs // num_prints
 num_hidden_units = 16
@@ -53,37 +53,26 @@ loss_values_Y = list()
 X_source_tensor = torch.tensor(X_source, dtype=torch.float32)
 y_source_tensor = torch.tensor(y_source.reshape(-1, 1), dtype=torch.float32)
 X_target_tensor = torch.tensor(X_target, dtype=torch.float32)
-y_target_tensor = torch.tensor(y_target.reshape(-1, 1), dtype=torch.float32)
 cost_matrix_X = distance.cdist(X_source, X_target, metric='minkowski', p = hyper_parameter_p) ** hyper_parameter_p
 cost_matrix_X_tensor = torch.tensor(cost_matrix_X, dtype=torch.float32)
-cost_matrix_Y1_coefficient = (y_source).reshape(-1, 1).repeat(X_target.shape[0], axis=1) * hyper_parameter_c
-cost_matrix_Y2_coefficient = (1 - y_source).reshape(-1, 1).repeat(X_target.shape[0], axis=1) * hyper_parameter_c
-cost_matrix_Y1_coefficient_tensor = torch.tensor(cost_matrix_Y1_coefficient, dtype=torch.float32)
-cost_matrix_Y2_coefficient_tensor = torch.tensor(cost_matrix_Y2_coefficient, dtype=torch.float32)
-
 
 for epoch in range(num_epochs):
     model.train()
     optimizer.zero_grad()
     y_target_prediction_tensor = model(X_target_tensor)
-    cost_matrix_Y1_variable_tensor = (1 - y_target_prediction_tensor ).reshape(1,-1).repeat(X_source.shape[0], 1)
-    cost_matrix_Y2_variable_tensor = (y_target_prediction_tensor).reshape(1,-1).repeat(X_source.shape[0], 1)
-    cost_matrix_Y1_tensor = cost_matrix_Y1_coefficient_tensor * cost_matrix_Y1_variable_tensor
-    cost_matrix_Y2_tensor = cost_matrix_Y2_coefficient_tensor * cost_matrix_Y2_variable_tensor
-    cost_matrix_tensor = cost_matrix_X_tensor + cost_matrix_Y1_tensor + cost_matrix_Y2_tensor
+    cost_matrix_Y_tensor = torch.abs(y_source_tensor.reshape(-1,1) - y_target_prediction_tensor.reshape(1,-1)) ** hyper_parameter_p  * hyper_parameter_c
+    cost_matrix_tensor = cost_matrix_X_tensor + cost_matrix_Y_tensor
     transport_matrix_tensor = get_transport_matrix(cost_matrix_tensor)
-    loss = torch.sum(transport_matrix_tensor * cost_matrix_tensor)
+    loss_from_X = torch.sum(transport_matrix_tensor * cost_matrix_X_tensor)
+    loss_from_Y = torch.sum(transport_matrix_tensor * cost_matrix_Y_tensor)
+    loss = loss_from_X + loss_from_Y
     loss.backward()
     optimizer.step()
     if epoch % num_epochs_per_print == 0:
-        loss_from_X = torch.sum(transport_matrix_tensor * cost_matrix_X_tensor)
-        loss_from_Y1 = torch.sum(transport_matrix_tensor * cost_matrix_Y1_tensor)
-        loss_from_Y2 = torch.sum(transport_matrix_tensor * cost_matrix_Y2_tensor)
-        print(f"Epoch [{epoch}/{num_epochs}], Loss: {loss.item():.4f} (X: {loss_from_X.item():.4f}, Y1: {loss_from_Y1.item():.4f}, Y2: {loss_from_Y2.item():.4f})")
+        print(f"Epoch [{epoch}/{num_epochs}], Loss: {loss.item():.4f} (X: {loss_from_X.item():.4f}, Y: {loss_from_Y.item():.4f})")
         loss_values.append(loss.item())
         loss_values_X.append(loss_from_X.item())
-        loss_values_Y.append(loss_from_Y1.item() + loss_from_Y2.item())
-
+        loss_values_Y.append(loss_from_Y.item())
 
 save_directory = project_root + "checkpoints/"
 save_file = get_timestamp_filename() + ".pth"
