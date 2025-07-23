@@ -3,6 +3,8 @@ from visualizations import *
 from evaluate import *
 import sys
 import os
+import time
+
 
 method_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 project_root = "../"
@@ -18,7 +20,7 @@ y_target = data['y_target']
 
 # Step 2: Set Hyper Parameter
 learning_rate = 0.001
-num_epochs = 20000
+num_epochs = 30000
 num_prints = 10
 num_epochs_per_print = num_epochs // num_prints
 num_hidden_units = 16
@@ -29,9 +31,10 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 
 # Step 3: Train and Save Classifier
+start_time = time.perf_counter()
+loss_values = list()
 X_tensor = torch.tensor(X_source, dtype=torch.float32)
 y_tensor = torch.tensor(y_source.reshape(-1, 1), dtype=torch.float32)
-loss_values = list()
 for epoch in range(num_epochs):
     model.train()
     optimizer.zero_grad()
@@ -45,14 +48,15 @@ for epoch in range(num_epochs):
 save_directory = project_root + "checkpoints/"
 save_file = get_timestamp_filename() + ".pth"
 torch.save(model.state_dict(), save_directory + save_file)
-
+end_time = time.perf_counter()
+duration = end_time - start_time
 
 
 # Step 4: Evaluate and record
 accuracy, positive_accuracy, negative_accuracy, positive_predictions_ratio = \
     evaluate_and_print_for_binary_classification(X_target, y_target, model)
 
-summarize_text = get_variable_names_and_values(save_file, method_name, case_number, learning_rate, num_epochs, num_hidden_units,
+summarize_text = get_variable_names_and_values(save_file, method_name, case_number, duration, learning_rate, num_epochs, num_hidden_units,
                                                accuracy, positive_accuracy, negative_accuracy, positive_predictions_ratio, loss_values)
 print(summarize_text)
 log_directory = project_root + "logs/"
