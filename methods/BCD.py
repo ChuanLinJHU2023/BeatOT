@@ -2,6 +2,7 @@ from models import *
 from visualizations import *
 from evaluate import *
 from scipy.spatial import distance
+from distances import *
 import sys
 import os
 import time
@@ -45,8 +46,8 @@ X_target_tensor = torch.tensor(X_target, dtype=torch.float32)
 y_target_tensor = torch.tensor(y_target.reshape(-1, 1), dtype=torch.float32)
 cost_matrix_X = distance.cdist(X_source, X_target, metric='minkowski', p = hyper_parameter_p) ** hyper_parameter_p
 cost_matrix_X_tensor = torch.tensor(cost_matrix_X, dtype=torch.float32)
-cost_matrix_Y1_coefficient = (y_source).reshape(-1, 1).repeat(X_target.shape[0], axis=1) * hyper_parameter_c ** hyper_parameter_p
-cost_matrix_Y2_coefficient = (1 - y_source).reshape(-1, 1).repeat(X_target.shape[0], axis=1) * hyper_parameter_c ** hyper_parameter_p
+cost_matrix_Y1_coefficient = (y_source).reshape(-1, 1).repeat(X_target.shape[0], axis=1) * hyper_parameter_c
+cost_matrix_Y2_coefficient = (1 - y_source).reshape(-1, 1).repeat(X_target.shape[0], axis=1) * hyper_parameter_c
 cost_matrix_Y1_coefficient_tensor = torch.tensor(cost_matrix_Y1_coefficient, dtype=torch.float32)
 cost_matrix_Y2_coefficient_tensor = torch.tensor(cost_matrix_Y2_coefficient, dtype=torch.float32)
 
