@@ -30,6 +30,9 @@ def get_variable_names_and_values(*variables, separator='; '):
     return separator.join(result_parts)
 
 
-def get_timestamp_filename():
+def get_timestamp_filename(just_day=False):
     import datetime
+    if just_day:
+        return datetime.datetime.now().strftime("%Y%m%d")
     return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+
