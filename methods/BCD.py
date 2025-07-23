@@ -12,6 +12,16 @@ import ot
 method_name = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 project_root = "../"
 
+# Key Function of BCD
+def get_transport_matrix(cost_matrix_tensor):
+    cost_matrix = cost_matrix_tensor.detach().numpy()
+    source_distribution = np.ones(cost_matrix.shape[0]) / cost_matrix.shape[0]
+    target_distribution = np.ones(cost_matrix.shape[1]) / cost_matrix.shape[1]
+    transport_matrix = ot.emd(source_distribution, target_distribution, cost_matrix)
+    transport_matrix_tensor = torch.tensor(transport_matrix, dtype=torch.float32)
+    return transport_matrix_tensor
+
+
 # Step 1: Get data
 case_number = 0
 data = np.load(project_root + f'cases/case{case_number}.npz')
@@ -51,13 +61,6 @@ cost_matrix_Y2_coefficient = (1 - y_source).reshape(-1, 1).repeat(X_target.shape
 cost_matrix_Y1_coefficient_tensor = torch.tensor(cost_matrix_Y1_coefficient, dtype=torch.float32)
 cost_matrix_Y2_coefficient_tensor = torch.tensor(cost_matrix_Y2_coefficient, dtype=torch.float32)
 
-def get_transport_matrix_from_cost_matrix(cost_matrix_tensor):
-    cost_matrix = cost_matrix_tensor.detach().numpy()
-    source_distribution = np.ones(cost_matrix.shape[0]) / cost_matrix.shape[0]
-    target_distribution = np.ones(cost_matrix.shape[1]) / cost_matrix.shape[1]
-    transport_matrix = ot.emd(source_distribution, target_distribution, cost_matrix)
-    transport_matrix_tensor = torch.tensor(transport_matrix, dtype=torch.float32)
-    return transport_matrix_tensor
 
 for epoch in range(num_epochs):
     model.train()
@@ -68,7 +71,7 @@ for epoch in range(num_epochs):
     cost_matrix_Y1_tensor = cost_matrix_Y1_coefficient_tensor * cost_matrix_Y1_variable_tensor
     cost_matrix_Y2_tensor = cost_matrix_Y2_coefficient_tensor * cost_matrix_Y2_variable_tensor
     cost_matrix_tensor = cost_matrix_X_tensor + cost_matrix_Y1_tensor + cost_matrix_Y2_tensor
-    transport_matrix_tensor = get_transport_matrix_from_cost_matrix(cost_matrix_tensor)
+    transport_matrix_tensor = get_transport_matrix(cost_matrix_tensor)
     loss = torch.sum(transport_matrix_tensor * cost_matrix_tensor)
     loss.backward()
     optimizer.step()
