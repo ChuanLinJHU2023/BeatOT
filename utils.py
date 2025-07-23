@@ -15,3 +15,21 @@ def print_format_string(text, total_length):
     result = left_hashes + text + right_hashes
     print(result)
 
+
+def get_variable_names_and_values(*variables, separator='; '):
+    import inspect
+    frame = inspect.currentframe().f_back
+    result_parts = []
+
+    for var in variables:
+        for name, val in frame.f_locals.items():
+            if val is var:
+                result_parts.append(f"{name} = {repr(val)}")
+                break
+
+    return separator.join(result_parts)
+
+
+def get_timestamp_filename():
+    import datetime
+    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
