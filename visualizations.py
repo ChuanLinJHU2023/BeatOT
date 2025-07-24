@@ -1,8 +1,11 @@
 import matplotlib.pyplot as plt
 import torch
 import numpy as np
+from tensorflow.python.keras.engine.training_v1 import Model
 
-def visualize_domains(datasets, labels, titles, x_limit=None, y_limit=None, with_model=None, single_plot=False, save_title=None):
+from models import *
+
+def visualize_domains(datasets, labels, titles, x_limit=None, y_limit=None, with_model=None, single_plot=False, save_path=None):
     """
     Plots multiple domain feature distributions side by side or on a single plot.
     When with_model is provided, predictions are visualized as a smoothed gradient background,
@@ -108,10 +111,34 @@ def visualize_domains(datasets, labels, titles, x_limit=None, y_limit=None, with
                 plt.legend()
 
     plt.tight_layout()
-    if save_title is not None:
-        plt.savefig(save_title)
+    if save_path is not None:
+        plt.savefig(save_path)
         plt.close()
     else:
         plt.show()
 
 
+def visualize_a_case(project_root=None, case_number=0, with_model_path=None, save_path=None):
+    if project_root==None:
+        project_root="./"
+    data = np.load(project_root + f'cases/case{case_number}.npz')
+    X_source = data['X_source']
+    y_source = data['y_source']
+    X_target = data['X_target']
+    y_target = data['y_target']
+    if not with_model_path:
+        visualize_domains([X_source, X_target], [y_source, y_target],
+                          ['Source Domain', "Target Domain"],
+                          x_limit=(-2.5, 3.5), y_limit=(-3, 3), with_model=None)
+    else:
+        model_path = project_root + "checkpoints/" + with_model_path
+        num_hidden_units = 16
+        list_of_num_hidden_units = [num_hidden_units]
+        model = SimpleClassifier(list_of_num_hidden_units)
+        model.load_state_dict(torch.load(model_path))
+        model.eval()
+        visualize_domains([X_source, X_target], [y_source, y_target],
+                          ['Source Domain', "Target Domain"],
+                          x_limit=(-2.5, 3.5), y_limit=(-3, 3), with_model=model)
+
+# visualize_a_case(case_number=1, with_model_path="20250723_215922.pth")
