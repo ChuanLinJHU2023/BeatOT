@@ -101,6 +101,48 @@ def calculate_causal_distance(Matrix1, Matrix2, costs, msg=False):
     return causal_distance, transport_plan
 
 
+
+def calculate_causal_distance_between_datasets(X1, y1, X2, y2, class_number_n=2, hyper_parameter_p=2, hyper_parameter_c=2, msg=False):
+    assert np.all(y1<=class_number_n - 1) and np.all(y2<=class_number_n - 1)
+    M = class_number_n
+    I = X1.shape[0]
+    N = class_number_n
+    J = X2.shape[0]
+    assert y1.shape == (I,)
+    assert y2.shape == (J,)
+    redundant_Matrix1 = np.row_stack([y1 == class_i for class_i in range(class_number_n)])
+    redundant_Matrix2 = np.row_stack([y2 == class_i for class_i in range(class_number_n)])
+    costs_X = distance.cdist(X1, X2, metric='minkowski', p=hyper_parameter_p)**hyper_parameter_p
+    costs_Y = (1 - np.eye(class_number_n)) * hyper_parameter_c
+    redundant_costs = costs_X.reshape(1, I, 1, J) + costs_Y.reshape(M, 1, N, 1)
+    causal_distance, redundant_transport_plan = calculate_causal_distance(redundant_Matrix1, redundant_Matrix2, redundant_costs, msg=msg)
+    transport_plan =  redundant_transport_plan[
+        y1[:, np.newaxis], np.arange(I)[:, np.newaxis], y2[np.newaxis, :], np.arange(J)[np.newaxis, :] ]
+        # This is advanced indexing. To help you understand, I use a function at the bottom of this file to illustrate
+    return causal_distance, transport_plan
+
+
+
+def calculate_causal_distance_between_dataset_and_soft_labelled_dataset(X1, y1, X2, y2, hyper_parameter_p=2, hyper_parameter_c=2, msg=False):
+    class_number_n = 2
+    assert np.all(y2<=1) and  np.all(y1<=1)
+    # assert len(np.unique(y2))==y2.size
+    M = 2
+    I = len(X1)
+    N = len(X2)
+    J = 1
+    redundant_Matrix1 = np.row_stack([y1 == 0, y1 == 1])
+    redundant_Matrix2 = np.ones(len(y2)).reshape(-1,1)
+    costs_X = distance.cdist(X1, X2, metric='minkowski', p=hyper_parameter_p)**hyper_parameter_p
+    costs_Y = np.row_stack((y2 ** hyper_parameter_p * hyper_parameter_c, (1 - y2) ** hyper_parameter_p * hyper_parameter_c))
+    redundant_costs = costs_X.reshape(1, I, N, 1) + costs_Y.reshape(2, 1, N, 1)
+    causal_distance, redundant_transport_plan = calculate_causal_distance(redundant_Matrix1, redundant_Matrix2, redundant_costs, msg=msg)
+    transport_plan =  redundant_transport_plan[
+        y1[:, np.newaxis], np.arange(I)[:, np.newaxis],  np.arange(N)[np.newaxis, :], 0 ]
+    return causal_distance, transport_plan
+
+
+
 def reduce_redundant_transport_matrix(redundant_transport_matrix, y1, y2):
     """
     Extracts a reduced transportation matrix from a higher-dimensional redundant matrix
@@ -128,38 +170,3 @@ def reduce_redundant_transport_matrix(redundant_transport_matrix, y1, y2):
         y1[:, np.newaxis], i_indices[:, np.newaxis], y2[np.newaxis, :], j_indices[np.newaxis, :]]
     assert new_transport_matrix.shape == (I, J)
     return new_transport_matrix
-
-
-def calculate_causal_distance_between_datasets(X1, y1, X2, y2, class_number_n=2, hyper_parameter_p=2, hyper_parameter_c=2, msg=False):
-    assert np.all(y1<class_number_n) and np.all(y2<class_number_n)
-    M = class_number_n
-    I = X1.shape[0]
-    N = class_number_n
-    J = X2.shape[0]
-    assert y1.shape == (I,)
-    assert y2.shape == (J,)
-    redundant_Matrix1 = np.row_stack([y1 == class_i for class_i in range(class_number_n)])
-    redundant_Matrix2 = np.row_stack([y2 == class_i for class_i in range(class_number_n)])
-    costs_X = distance.cdist(X1, X2, metric='minkowski', p=hyper_parameter_p)**hyper_parameter_p
-    costs_Y = (1 - np.eye(class_number_n)) * hyper_parameter_c
-    redundant_costs = costs_X.reshape(1, I, 1, J) + costs_Y.reshape(M, 1, N, 1)
-    causal_distance, redundant_transport_plan = calculate_causal_distance(redundant_Matrix1, redundant_Matrix2, redundant_costs, msg=msg)
-    return causal_distance, reduce_redundant_transport_matrix(redundant_transport_plan, y1, y2)
-
-
-
-def calculate_causal_distance_between_dataset_and_soft_labelled_dataset(X1, y1, X2, y2, hyper_parameter_p=2, hyper_parameter_c=2, msg=False):
-    assert np.all(y1<=1)
-    assert np.all(y2<=1)
-    class_number_n = 2
-    M = 2
-    I = len(X1)
-    N = len(X2)
-    J = 1
-    redundant_Matrix1 = np.row_stack([y1 == 0, y1 == 1])
-    redundant_Matrix2 = np.ones(len(y2)).reshape(-1,1)
-    costs_X = distance.cdist(X1, X2, metric='minkowski', p=hyper_parameter_p)**hyper_parameter_p
-    costs_Y = np.row_stack((y2 ** hyper_parameter_p * hyper_parameter_c, (1 - y2) ** hyper_parameter_p * hyper_parameter_c))
-    redundant_costs = costs_X.reshape(1, I, N, 1) + costs_Y.reshape(2, 1, N, 1)
-    causal_distance, redundant_transport_plan = calculate_causal_distance(redundant_Matrix1, redundant_Matrix2, redundant_costs, msg=msg)
-    return causal_distance, reduce_redundant_transport_matrix(redundant_transport_plan, y1, y2)
