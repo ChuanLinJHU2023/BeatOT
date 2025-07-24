@@ -7,9 +7,10 @@ import time
 import ot
 from distances import *
 
-def method_tradition(case_number = 0, learning_rate = 0.002, num_epochs = 10000, num_prints = 10, num_hidden_units = 16):
+def method_tradition(project_root = None, case_number = 0, learning_rate = 0.002, num_epochs = 10000, num_prints = 10, num_hidden_units = 16):
     method_name = "Tradition"
-    project_root = "./"
+    if project_root is None:
+        project_root = "./"
 
     # Step 1: Get data
     data = np.load(project_root + f'cases/case{case_number}.npz')
@@ -63,10 +64,11 @@ def method_tradition(case_number = 0, learning_rate = 0.002, num_epochs = 10000,
 
 
 
-def method_BCD_or_CD(if_BCD=True, case_number=0, hyper_parameter_p=2, hyper_parameter_c=2, learning_rate=0.002,
+def method_BCD_or_CD(project_root=None, if_BCD=True, case_number=0, hyper_parameter_p=2, hyper_parameter_c=2, learning_rate=0.002,
                      num_epochs=20000, num_prints=10, num_hidden_units=16):
     method_name = "BCD" if if_BCD else "CD"
-    project_root = "./"
+    if project_root is None:
+        project_root = "./"
 
     # Key Function of BCD
     def get_transport_matrix_BCD(cost_matrix_tensor):
