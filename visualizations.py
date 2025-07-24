@@ -118,7 +118,7 @@ def visualize_domains(datasets, labels, titles, x_limit=None, y_limit=None, with
         plt.show()
 
 
-def visualize_a_case(project_root=None, case_number=0, with_model_path=None, save_path=None):
+def visualize_a_case(project_root=None, case_number=0, checkpoint_file_path=None, visualization_file_path=None):
     if project_root==None:
         project_root="./"
     data = np.load(project_root + f'cases/case{case_number}.npz')
@@ -126,19 +126,18 @@ def visualize_a_case(project_root=None, case_number=0, with_model_path=None, sav
     y_source = data['y_source']
     X_target = data['X_target']
     y_target = data['y_target']
-    if not with_model_path:
+    if not checkpoint_file_path:
         visualize_domains([X_source, X_target], [y_source, y_target],
                           ['Source Domain', "Target Domain"],
-                          x_limit=(-2.5, 3.5), y_limit=(-3, 3), with_model=None)
+                          x_limit=(-2.5, 3.5), y_limit=(-3, 3), with_model=None, save_path=visualization_file_path)
     else:
-        model_path = project_root + "checkpoints/" + with_model_path
         num_hidden_units = 16
         list_of_num_hidden_units = [num_hidden_units]
         model = SimpleClassifier(list_of_num_hidden_units)
-        model.load_state_dict(torch.load(model_path))
+        model.load_state_dict(torch.load(checkpoint_file_path))
         model.eval()
         visualize_domains([X_source, X_target], [y_source, y_target],
                           ['Source Domain', "Target Domain"],
-                          x_limit=(-2.5, 3.5), y_limit=(-3, 3), with_model=model)
+                          x_limit=(-2.5, 3.5), y_limit=(-3, 3), with_model=model, save_path=visualization_file_path)
 
-# visualize_a_case(case_number=1, with_model_path="20250723_215922.pth")
+# visualize_a_case(case_number=1, checkpoint_file_path="./checkpoints/20250723_215922.pth", visualization_file_path="./images/MyImage3.png")

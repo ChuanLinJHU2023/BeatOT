@@ -1,0 +1,7 @@
+I have a pd.dataframe where there are fields including "save_file", "method_name", "case_number", indicating one certain experiment that we use a certain method to train classifier on a certain case and save this classifier to certain file. For each (method, case) combination, there are multiple corresponding experiments, and thus multiple save_files. I want you to do the following thing: for each  (method, case) combination, pick up a corresponding save_file as you want and generate a corresponding image using function visualize_a_case(case_number=case_number, checkpoint_file_path="./checkpoints/"+save_file, visualization_file_path="./images/AnyNameYouWant.png").
+
+
+
+
+
+good job! Now I need to you to change your code as follows: after you generate a image for each (method, case) combination, combine these images vertically as subgraphs into one big image. In this big image, Each subgraph has a title (method, case) . I want to use this big image to compare performance of difference methods in the same case. You should notice the following points: 1. You should sort subgraphs according to case not method. 2. All images used to generate the one big image should be deleted after program finishing
