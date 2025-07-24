@@ -8,6 +8,7 @@ pd.set_option('display.width', 1000)
 # Read file
 df = read_file_to_dataframe('../logs/20250723.txt')
 print(df)
+df.to_excel('logs1.xlsx', index=False)
 
 # Assuming your DataFrame is called df
 # Replace 'method_name', 'case_number', and 'accuracy' with actual column names if different
@@ -25,3 +26,4 @@ analysis.columns = ['method_name', 'case_number', 'best_accuracy', 'average_accu
 # Sort by case_number for comparison
 analysis_sorted = analysis.sort_values(by='case_number')
 print(analysis_sorted)
+
